@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+
+<html>
+
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title>Babylon Template</title>
+
+        <style>
+            html, body {
+                overflow: hidden;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+                font-family: 'Silkscreen';
+            }
+
+            #renderCanvas {
+                width: 100%;
+                height: 100%;
+                touch-action: none;
+            }
+            
+            #fps {
+                position: absolute;
+                background-color: black;
+                border: 2px solid red;
+                text-align: center;
+                font-size: 16px;
+                color: white;
+                top: 15px;
+                right: 10px;
+                width: 60px;
+                height: 20px;
+            }
+            @font-face { 
+                font-family: 'Silkscreen';
+                src: url('res/slkscr.ttf') format('truetype'); 
+            }
+            
+        </style>
+    
+        <script src="https://preview.babylonjs.com/babylon.js"></script>
+        <script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
+        <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+        <script src="boss.js"></script>
+        <script src="gui.js"></script>
+        <script src="item.js"></script>
+        <script src="player.js"></script>
+        <script src="ai.js"></script>
+        <script src="game.js"></script>
+        <script src="assets.js"></script>
+        <script src="map.js"></script>
+    </head>
+
+    <body>
+        <canvas id="renderCanvas" touch-action="none"></canvas>
+        <div id="fps">0</div>
+        
+        <script>
+            var canvas = document.getElementById("renderCanvas");
+            var engine = new BABYLON.Engine(canvas, true);
+            
+            // display fps
+            let divFps = document.getElementById("fps");
+            
+            var scene = new BABYLON.Scene(engine);
+            var assetsManager = new BABYLON.AssetsManager(scene);
+
+            monsterAssets.forEach(image => {
+                assetsManager.addTextureTask(image.name, image.filename).onSuccess = function(task) {
+                    task.texture.hasAlpha = true;
+                    task.texture.updateSamplingMode(BABYLON.Texture.NEAREST_SAMPLINGMODE);
+                    monsterTextures[image.name] = task.texture;
+                }
+            });
+            bossAssets.forEach(image => {
+                assetsManager.addTextureTask(image.name, image.filename).onSuccess = function(task) {
+                    task.texture.hasAlpha = true;
+                    task.texture.updateSamplingMode(BABYLON.Texture.NEAREST_SAMPLINGMODE);
+                    bossTextures[image.name] = task.texture;
+                }
+            });
+            tileAssets.forEach(image => {
+                assetsManager.addTextureTask(image.name, image.filename).onSuccess = function(task) {
+                    task.texture.hasAlpha = true;
+                    task.texture.updateSamplingMode(BABYLON.Texture.NEAREST_SAMPLINGMODE);
+                    tileTextures[image.name] = task.texture;
+                }
+            });
+            effectAssets.forEach(image => {
+                assetsManager.addTextureTask(image.name, image.filename).onSuccess = function(task) {
+                    task.texture.hasAlpha = true;
+                    task.texture.updateSamplingMode(BABYLON.Texture.NEAREST_SAMPLINGMODE);
+                    effectTextures[image.name] = task.texture;
+                }
+            });
+            
+            itemAssets.forEach(image => {
+                assetsManager.addTextureTask(image.name, image.filename).onSuccess = function(task) {
+                    task.texture.hasAlpha = true;
+                    task.texture.updateSamplingMode(BABYLON.Texture.NEAREST_SAMPLINGMODE);
+                    itemTextures[image.name] = task.texture;
+                }
+            });
+            
+            soundAssets.forEach(sound => {
+                assetsManager.addBinaryFileTask(sound.name, sound.filename).onSuccess = function(task) {
+                    var volume = 0.2;
+                    var loop = false;
+                    var autoplay = false;
+                    
+                    if (sound.name === "jumpscare") {
+                        volume = 1;
+                    }
+                    else if (sound.name === "music") {
+                        volume = 0.1;
+                        loop = true;
+                        autplay = true;
+                    }
+                    else if (sound.name === "enemy_hurt") {
+                        volume = 1.0;
+                    }
+                
+                    sounds[sound.name] = new BABYLON.Sound(sound.name, task.data, scene, null, {
+                        volume: volume,
+                        loop: loop,
+                        autoplay: autoplay,
+                    });
+                }
+            });
+            
+            assetsManager.onTaskErrorObservable.add(function(task) {
+                console.log('task failed', task.errorObject.message, task.errorObject.exception);
+            });
+            assetsManager.onProgress = function(remainingCount, totalCount, lastFinishedTask) {
+                engine.loadingUIText = 'Loading scene: ' + (totalCount-remainingCount) + ' out of ' + totalCount;
+            };
+
+            assetsManager.onFinish = function(tasks) {
+                
+                init(scene);
+                
+                engine.runRenderLoop(function() {
+                    Update();
+                    scene.render();
+                    
+                    // update fps
+                    divFps.innerHTML = engine.getFps().toFixed() + " fps";
+                });
+            };
+            
+            assetsManager.load();
+            
+            window.addEventListener("resize", function () {
+                engine.resize();
+            });
+            
+            
+            function pointerLockChanged(event) {
+                var controlEnabled = (
+                    document.mozPointerLockElement === canvas
+                    || document.webkitPointerLockElement === canvas
+                    || document.msPointerLockElement === canvas
+                    || document.pointerLockElement === canvas);
+                
+                if (!controlEnabled) {
+                    isLocked = false;
+                } else {
+                    isLocked = true;
+                }
+            }
+            document.addEventListener("pointerlockchange", pointerLockChanged, false);
+	        document.addEventListener("mspointerlockchange", pointerLockChanged, false);
+	        document.addEventListener("mozpointerlockchange", pointerLockChanged, false);
+	        document.addEventListener("webkitpointerlockchange", pointerLockChanged, false);
+        </script>
+    </body>
+
+</html>
